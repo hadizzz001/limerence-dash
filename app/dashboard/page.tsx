@@ -400,8 +400,12 @@ onSave({
   title,
   description,
   price: noPrice ? null : Number(price).toFixed(2),
-  discount: Number(discount).toFixed(2),
-  percentage: Number(percentage).toFixed(2),      // ✅ NEW
+   discount:
+    discount !== null && discount !== undefined && discount !== ""
+      ? Number(discount).toFixed(2)
+      : Number(price).toFixed(2),   // ✅ if discount is empty, use price
+
+  percentage: percentage ? String(percentage) : null,
   img,
   category: selectedCategory,
   type,
@@ -544,7 +548,24 @@ onSave({
   <input
     type="number"
     value={percentage}
-    onChange={(e) => setPercentage(e.target.value)}
+    onChange={(e) => {
+    const percentageValue = Number(e.target.value);
+    setPercentage(percentageValue);
+
+    if (!price) {
+      setDiscount("");
+      return;
+    }
+
+    const originalPrice = Number(price);
+
+    if (percentageValue === 0) {
+      setDiscount(originalPrice.toFixed(2)); // Final price = price
+    } else {
+      const finalPrice = originalPrice - (originalPrice * percentageValue) / 100;
+      setDiscount(finalPrice.toFixed(2));
+    }
+  }}
     className="w-full border p-2 mb-2"
     placeholder="Enter percentage %"
   />
