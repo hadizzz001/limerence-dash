@@ -401,7 +401,7 @@ onSave({
   description,
   price: noPrice ? null : Number(price).toFixed(2),
   discount: Number(discount).toFixed(2),
-  percentage: Number(percentage),      // ✅ NEW
+  percentage: Number(percentage).toFixed(2),      // ✅ NEW
   img,
   category: selectedCategory,
   type,
