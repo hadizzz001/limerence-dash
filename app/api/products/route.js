@@ -16,6 +16,7 @@ export async function POST(req) {
       arrival,
       color,
       type,
+      percentage,
  
     } = body;
 
@@ -35,6 +36,7 @@ export async function POST(req) {
         arrival,
         color,
         type,
+      percentage,
  
 
       },

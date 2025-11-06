@@ -12,7 +12,7 @@ model Product {
   title        String
   description  String
   price        String?
-  discount     String
+  discount     String?
   img          String[]
   category     String
   stock        String?
@@ -20,6 +20,7 @@ model Product {
   type         String
   arrival      String   @default("no")
   points      String?
+    percentage      String?
 }
 
 model Category {
@@ -53,5 +54,6 @@ model Review {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String
+  stars String
   date        DateTime @default(now()) @db.Date
 }

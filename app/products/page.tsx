@@ -22,6 +22,8 @@ export default function AddProduct() {
   const [discount, setDiscount] = useState('');
   const [points, setPoints] = useState('');
 const [noPrice, setNoPrice] = useState(false);
+const [percentage, setPercentage] = useState('');
+
 
 
 
@@ -124,37 +126,45 @@ const [noPrice, setNoPrice] = useState(false);
 
 
 
-    const payload = {
-      title,
-      description,
-      price: noPrice ? null : Number(price).toFixed(2),
-      discount: discount ? Number(discount).toFixed(2) : null,
-      img,
-      category: selectedCategory, 
-      type: productType,
-      // points: String(points),
-      ...(productType === 'single' && { stock }),
-      ...(productType === 'collection' && {
-        color: selectedColors.map(color => {
-          const data = colorQuantities[color] || {};
-          if (data.sizes && Object.keys(data.sizes).length > 0) {
-            return {
-              color,
-              sizes: Object.entries(data.sizes).map(([size, values]) => ({
-                size,
-                price: Number(parseFloat(values.price).toFixed(2)),
-                qty: Number(values.qty)
-              }))
-            };
-          } else {
-            return {
-              color,
-              qty: Number(data.qty || 0)
-            };
-          }
-        })
-      })
-    };
+const payload = {
+  title,
+  description,
+  price: noPrice ? null : Number(price).toFixed(2),
+
+  // <--- FIX HERE
+  percentage: percentage ? String(percentage) : null,
+
+  discount:
+    discount !== null && discount !== undefined && discount !== ""
+      ? Number(discount).toFixed(2)
+      : Number(price).toFixed(2),   // ✅ if discount is empty, use price
+
+  img,
+  category: selectedCategory,
+  type: productType,
+  ...(productType === "single" && { stock }),
+  ...(productType === "collection" && {
+    color: selectedColors.map(color => {
+      const data = colorQuantities[color] || {};
+      if (data.sizes && Object.keys(data.sizes).length > 0) {
+        return {
+          color,
+          sizes: Object.entries(data.sizes).map(([size, values]) => ({
+            size,
+            price: Number(parseFloat(values.price).toFixed(2)),
+            qty: Number(values.qty),
+          })),
+        };
+      } else {
+        return {
+          color,
+          qty: Number(data.qty || 0),
+        };
+      }
+    }),
+  }),
+};
+
 
 
 
@@ -250,16 +260,7 @@ const [noPrice, setNoPrice] = useState(false);
 
 
 
-{/* No Price Checkbox */}
-<div className="flex items-center gap-2 mb-4">
-  <input
-    type="checkbox"
-    id="noPrice"
-    checked={noPrice}
-    onChange={(e) => setNoPrice(e.target.checked)}
-  />
-  <label htmlFor="noPrice" className="text-sm font-medium">No Discount</label>
-</div>
+ 
 
 {/* Price Input (hidden when noPrice is true) */}
 {!noPrice && (
@@ -274,6 +275,43 @@ const [noPrice, setNoPrice] = useState(false);
   />
 )}
 
+{/* Percentage Input (discount percentage) */}
+<input
+  type="number"
+  placeholder="Discount %"
+  value={percentage}
+  onChange={(e) => {
+    const percentageValue = Number(e.target.value);
+    setPercentage(percentageValue);
+
+    if (!price) {
+      setDiscount("");
+      return;
+    }
+
+    const originalPrice = Number(price);
+
+    if (percentageValue === 0) {
+      setDiscount(originalPrice.toFixed(2)); // Final price = price
+    } else {
+      const finalPrice = originalPrice - (originalPrice * percentageValue) / 100;
+      setDiscount(finalPrice.toFixed(2));
+    }
+  }}
+  className="w-full border p-2 mb-4"
+/>
+
+
+{/* Show discount after percentage applied */}
+{discount && (
+  <p className="text-green-600 mb-2 font-semibold">
+    Discount Amount: {discount}
+  </p>
+)}
+
+
+ 
+
 {/* Discount Input (always visible) */}
 <input
   type="number"
@@ -282,6 +320,7 @@ const [noPrice, setNoPrice] = useState(false);
   value={discount}
   onChange={(e) => setDiscount(e.target.value)}
   className="w-full border p-2 mb-4"
+  readOnly
 />
 
 

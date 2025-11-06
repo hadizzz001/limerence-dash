@@ -55,6 +55,11 @@ export default function Sidebar() {
               </a>
             </li> 
             <li>
+              <a href="/review" style={{ color: "white", textDecoration: "none" }}>
+                Reviews
+              </a>
+            </li> 
+            <li>
               <a href="/" style={{ color: "white", textDecoration: "none" }}>
                 Logout
               </a>

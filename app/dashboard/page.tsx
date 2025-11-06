@@ -155,7 +155,7 @@ export default function ProductTable() {
             <th className="border p-2">Category</th>
             <th className="border p-2">Type</th>
             <th className="border p-2">Stock</th>
-            <th className="border p-2">Colors & Qty</th>
+            {/* <th className="border p-2">Colors & Qty</th> */}
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
@@ -269,7 +269,7 @@ export default function ProductTable() {
                   }
                 </td>
 
-                <td className="border p-2">
+                {/* <td className="border p-2">
                   {!isSingle && product.color && product.color.length > 0 ? (
                     <ul className="space-y-1">
                       {product.color.map((c, index) => (
@@ -292,7 +292,7 @@ export default function ProductTable() {
                   ) : (
                     isCollection ? 'No colors' : '—'
                   )}
-                </td>
+                </td> */}
 
 
                 <td className="border p-2">
@@ -332,10 +332,12 @@ function EditProductForm({ product, onCancel, onSave }) {
   const [categories, setCategories] = useState([]);
   const [type, setType] = useState(product.type || "single");
   const [price, setPrice] = useState(product.price);
-  const [discount, setDiscount] = useState(product.discount);
+const [discount, setDiscount] = useState(product.discount || 0);
+
   const [selectedCategory, setSelectedCategory] = useState(product.category || ""); 
   const [points, setPoints] = useState(product.points || "");
 const [noPrice, setNoPrice] = useState(product.price === null || product.price === 0);
+const [percentage, setPercentage] = useState(product.percentage || 0);
 
 
  
@@ -367,6 +369,25 @@ const [noPrice, setNoPrice] = useState(product.price === null || product.price =
   }, []);
 
 
+
+  useEffect(() => {
+  if (noPrice) {
+    setDiscount(0);
+    return;
+  }
+
+  const priceNum = Number(price) || 0;
+  const percentNum = Number(percentage) || 0;
+
+  // If percentage = 0 → discount amount = price
+  const calcDiscount = percentNum === 0
+    ? priceNum
+    : priceNum - (priceNum * percentNum) / 100;
+
+  setDiscount(calcDiscount.toFixed(2));
+}, [price, percentage, noPrice]);
+
+
  
 
 
@@ -374,37 +395,38 @@ const [noPrice, setNoPrice] = useState(product.price === null || product.price =
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    onSave({
-      ...product,
-      title,
-      description,
-     price: noPrice ? null : Number(price).toFixed(2),
-      discount: Number(discount).toFixed(2),
-      img,
-      category: selectedCategory,
-      // points: String(points),
-      type,
-      ...(type === 'single' && { stock: stock }),
-      ...(type === 'collection' && {
-        color: Object.entries(selectedColors).map(([colorName, data]) => {
-          const { qty, sizes } = data;
-          const hasSizes = sizes && Object.keys(sizes).length > 0;
-          return hasSizes
-            ? {
-              color: colorName,
-              sizes: Object.entries(sizes).map(([size, values]) => ({
-                size: values.size,
-                price: Number(values.price),
-                qty: Number(values.qty)
-              }))
-            }
-            : {
-              color: colorName,
-              qty: Number(qty)
-            };
-        })
-      })
-    });
+onSave({
+  ...product,
+  title,
+  description,
+  price: noPrice ? null : Number(price).toFixed(2),
+  discount: Number(discount).toFixed(2),
+  percentage: Number(percentage),      // ✅ NEW
+  img,
+  category: selectedCategory,
+  type,
+  ...(type === 'single' && { stock }),
+  ...(type === 'collection' && {
+    color: Object.entries(selectedColors).map(([colorName, data]) => {
+      const { qty, sizes } = data;
+      const hasSizes = sizes && Object.keys(sizes).length > 0;
+      return hasSizes
+        ? {
+            color: colorName,
+            sizes: Object.entries(sizes).map(([size, values]) => ({
+              size: values.size,
+              price: Number(values.price),
+              qty: Number(values.qty)
+            }))
+          }
+        : {
+            color: colorName,
+            qty: Number(qty)
+          };
+    })
+  })
+});
+
   };
 
 
@@ -516,17 +538,29 @@ const [noPrice, setNoPrice] = useState(product.price === null || product.price =
   </div>
 )}
 
-{/* Discount Input (always visible) */}
+{/* Percentage Input */}
 <div className="mt-4">
-  <label className="text-sm font-bold">Discount</label>
+  <label className="text-sm font-bold">Discount %</label>
+  <input
+    type="number"
+    value={percentage}
+    onChange={(e) => setPercentage(e.target.value)}
+    className="w-full border p-2 mb-2"
+    placeholder="Enter percentage %"
+  />
+</div>
+
+{/* Discount amount (readonly) */}
+<div className="mt-4">
+  <label className="text-sm font-bold">Discount Amount (Auto)</label>
   <input
     type="number"
     value={discount}
-    onChange={(e) => setDiscount(e.target.value)}
-    className="w-full border p-2 mb-2"
-    placeholder="Enter discounted price"
+    readOnly
+    className="w-full border p-2 bg-gray-200 cursor-not-allowed mb-2"
   />
 </div>
+
 
 
 
