@@ -60,6 +60,11 @@ export default function Sidebar() {
               </a>
             </li> 
             <li>
+              <a href="/banner1" style={{ color: "white", textDecoration: "none" }}>
+                Offer slider
+              </a>
+            </li> 
+            <li>
               <a href="/" style={{ color: "white", textDecoration: "none" }}>
                 Logout
               </a>
