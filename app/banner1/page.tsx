@@ -31,8 +31,8 @@ const ManageCategory = () => {
 
   // Edit category (only allowed for specific ID)
   const handleEdit = (category) => {
-    if (category.id !== '68a864a47451b9a1c5d4491f') {
-      setMessage('Editing is only allowed for category with ID: 68a864a47451b9a1c5d4491f');
+    if (category.id !== '692ad049d87c7f5bd71b5af6') {
+      setMessage('Editing is only allowed for category with ID: 692ad049d87c7f5bd71b5af6');
       return;
     }
     setEditMode(true);
@@ -45,8 +45,8 @@ const ManageCategory = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
 
-    if (editFormData.id !== '68a864a47451b9a1c5d4491f') {
-      setMessage('Only this category can be updated: 68a864a47451b9a1c5d4491f');
+    if (editFormData.id !== '692ad049d87c7f5bd71b5af6') {
+      setMessage('Only this category can be updated: 692ad049d87c7f5bd71b5af6');
       return;
     }
 
@@ -151,7 +151,7 @@ const ManageCategory = () => {
                   {Array.isArray(category.name) ? category.name.join(', ') : category.name}
                 </td>
                 <td className="border border-gray-300 p-2 text-center">
-                  {category.id === '68a864a47451b9a1c5d4491f' && (
+                  {category.id === '692ad049d87c7f5bd71b5af6' && (
                     <button
                       onClick={() => handleEdit(category)}
                       className="bg-yellow-500 text-white px-4 py-1 rounded"

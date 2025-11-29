@@ -36,6 +36,9 @@ export async function PATCH(req) {
  
     const {  name } = await req.json(); 
 
+    console.log("id ", id);
+    console.log("name ", name);
+    
 
     const updatedCategory = await prisma.banner1.update({
       where: { id },
