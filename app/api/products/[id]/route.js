@@ -40,7 +40,6 @@ export async function PATCH(request, { params }) {
         color ,
         type ,
       percentage,
- 
          
       },
     });

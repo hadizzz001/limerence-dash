@@ -13,16 +13,16 @@ export default function ProductTable() {
   const [categories, setCategories] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');  
+  const [selectedCategory, setSelectedCategory] = useState('');
 
 
   // Fetch products and categories on load
   useEffect(() => {
     fetchProducts();
-    fetchCategories(); 
+    fetchCategories();
   }, []);
 
- 
+
 
   const fetchProducts = async () => {
     const response = await fetch('/api/products');
@@ -105,6 +105,38 @@ export default function ProductTable() {
 
 
 
+const handleSaveAll = async () => {
+  try {
+    // Filter only products that have a valid id
+    const updates = products
+      .filter((p) => p.id && p.sort !== undefined && p.sort !== null)
+      .map(({ id, sort }) => ({ id, sort }));
+
+    if (updates.length === 0) {
+      alert("No products to update!");
+      return;
+    }
+
+    // Run all PATCH requests in parallel
+    await Promise.all(
+      updates.map((item) =>
+        fetch(`/api/products1/${item.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sort: Number(item.sort) }),
+        })
+      )
+    );
+
+    alert("✅ All sort values saved successfully!");
+    fetchProducts(); // Refresh data after update
+  } catch (error) {
+    console.error("Error saving all:", error);
+    alert("❌ Failed to save sort values");
+  }
+};
+
+
 
   return (
     <div className="max-w-7xl mx-auto p-4 text-[12px]">
@@ -146,6 +178,13 @@ export default function ProductTable() {
 
       <ExportToExcel products={products} />
 
+      <button
+        onClick={handleSaveAll}
+        className="ml-3 px-4 py-2 bg-blue-600 text-white rounded mb-5"
+      >
+        Save Sorts
+      </button>
+
       <table className="table-auto w-full border-collapse border border-gray-200 mb-4">
         <thead>
           <tr className="bg-gray-100">
@@ -155,6 +194,7 @@ export default function ProductTable() {
             <th className="border p-2">Category</th>
             <th className="border p-2">Type</th>
             <th className="border p-2">Stock</th>
+            <th className="border p-2">Sort</th>
             {/* <th className="border p-2">Colors & Qty</th> */}
             <th className="border p-2">Actions</th>
           </tr>
@@ -293,7 +333,19 @@ export default function ProductTable() {
                     isCollection ? 'No colors' : '—'
                   )}
                 </td> */}
-
+                <td className="border p-2">
+                  <input
+                    type="number"
+                    value={product.sort || ''}
+                    onChange={(e) => {
+                      const updated = [...products];
+                      const index = updated.findIndex((p) => p.id === product.id);
+                      updated[index].sort = e.target.value;
+                      setProducts(updated); // ✅ Keep sort change in main state
+                    }}
+                    className="border p-1 w-20"
+                  />
+                </td>
 
                 <td className="border p-2">
                   <button
@@ -332,15 +384,15 @@ function EditProductForm({ product, onCancel, onSave }) {
   const [categories, setCategories] = useState([]);
   const [type, setType] = useState(product.type || "single");
   const [price, setPrice] = useState(product.price);
-const [discount, setDiscount] = useState(product.discount || 0);
+  const [discount, setDiscount] = useState(product.discount || 0);
 
-  const [selectedCategory, setSelectedCategory] = useState(product.category || ""); 
+  const [selectedCategory, setSelectedCategory] = useState(product.category || "");
   const [points, setPoints] = useState(product.points || "");
-const [noPrice, setNoPrice] = useState(product.price === null || product.price === 0);
-const [percentage, setPercentage] = useState(product.percentage || 0);
+  const [noPrice, setNoPrice] = useState(product.price === null || product.price === 0);
+  const [percentage, setPercentage] = useState(product.percentage || 0);
 
 
- 
+
 
   const availableColors = ["black", "white", "red", "yellow", "blue", "green", "orange", "purple", "brown", "gray", "pink"];
 
@@ -371,65 +423,65 @@ const [percentage, setPercentage] = useState(product.percentage || 0);
 
 
   useEffect(() => {
-  if (noPrice) {
-    setDiscount(0);
-    return;
-  }
+    if (noPrice) {
+      setDiscount(0);
+      return;
+    }
 
-  const priceNum = Number(price) || 0;
-  const percentNum = Number(percentage) || 0;
+    const priceNum = Number(price) || 0;
+    const percentNum = Number(percentage) || 0;
 
-  // If percentage = 0 → discount amount = price
-  const calcDiscount = percentNum === 0
-    ? priceNum
-    : priceNum - (priceNum * percentNum) / 100;
+    // If percentage = 0 → discount amount = price
+    const calcDiscount = percentNum === 0
+      ? priceNum
+      : priceNum - (priceNum * percentNum) / 100;
 
-  setDiscount(calcDiscount.toFixed(2));
-}, [price, percentage, noPrice]);
+    setDiscount(calcDiscount.toFixed(2));
+  }, [price, percentage, noPrice]);
 
 
- 
+
 
 
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-onSave({
-  ...product,
-  title,
-  description,
-  price: noPrice ? null : Number(price).toFixed(2),
-   discount:
-    discount !== null && discount !== undefined && discount !== ""
-      ? Number(discount).toFixed(2)
-      : Number(price).toFixed(2),   // ✅ if discount is empty, use price
+    onSave({
+      ...product,
+      title,
+      description,
+      price: noPrice ? null : Number(price).toFixed(2),
+      discount:
+        discount !== null && discount !== undefined && discount !== ""
+          ? Number(discount).toFixed(2)
+          : Number(price).toFixed(2),   // ✅ if discount is empty, use price
 
-  percentage: percentage ? String(percentage) : null,
-  img,
-  category: selectedCategory,
-  type,
-  ...(type === 'single' && { stock }),
-  ...(type === 'collection' && {
-    color: Object.entries(selectedColors).map(([colorName, data]) => {
-      const { qty, sizes } = data;
-      const hasSizes = sizes && Object.keys(sizes).length > 0;
-      return hasSizes
-        ? {
-            color: colorName,
-            sizes: Object.entries(sizes).map(([size, values]) => ({
-              size: values.size,
-              price: Number(values.price),
-              qty: Number(values.qty)
-            }))
-          }
-        : {
-            color: colorName,
-            qty: Number(qty)
-          };
-    })
-  })
-});
+      percentage: percentage ? String(percentage) : null,
+      img,
+      category: selectedCategory,
+      type,
+      ...(type === 'single' && { stock }),
+      ...(type === 'collection' && {
+        color: Object.entries(selectedColors).map(([colorName, data]) => {
+          const { qty, sizes } = data;
+          const hasSizes = sizes && Object.keys(sizes).length > 0;
+          return hasSizes
+            ? {
+              color: colorName,
+              sizes: Object.entries(sizes).map(([size, values]) => ({
+                size: values.size,
+                price: Number(values.price),
+                qty: Number(values.qty)
+              }))
+            }
+            : {
+              color: colorName,
+              qty: Number(qty)
+            };
+        })
+      })
+    });
 
   };
 
@@ -507,7 +559,6 @@ onSave({
         <option value="">Select Category</option>
         {categories.map((cat) => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
       </select>
- 
 
 
 
@@ -517,75 +568,76 @@ onSave({
 
 
 
-{/* No Price Checkbox */}
-<div className="flex items-center gap-2 mb-4">
-  <input
-    type="checkbox"
-    id="noPrice"
-    checked={noPrice}
-    onChange={(e) => setNoPrice(e.target.checked)}
-  />
-  <label htmlFor="noPrice" className="text-sm font-medium">No Price</label>
-</div>
 
-{/* Price Input (hidden when noPrice is true) */}
-{!noPrice && (
-  <div className="mt-4">
-    <label className="text-sm font-bold">Price</label>
-    <input
-      type="number"
-      value={price}
-      onChange={(e) => setPrice(e.target.value)}
-      className="w-full border p-2 mb-2"
-      placeholder="Enter price"
-    />
-  </div>
-)}
+      {/* No Price Checkbox */}
+      <div className="flex items-center gap-2 mb-4">
+        <input
+          type="checkbox"
+          id="noPrice"
+          checked={noPrice}
+          onChange={(e) => setNoPrice(e.target.checked)}
+        />
+        <label htmlFor="noPrice" className="text-sm font-medium">No Price</label>
+      </div>
 
-{/* Percentage Input */}
-<div className="mt-4">
-  <label className="text-sm font-bold">Discount %</label>
-  <input
-    type="number"
-    value={percentage}
-    onChange={(e) => {
-    const percentageValue = Number(e.target.value);
-    setPercentage(percentageValue);
+      {/* Price Input (hidden when noPrice is true) */}
+      {!noPrice && (
+        <div className="mt-4">
+          <label className="text-sm font-bold">Price</label>
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full border p-2 mb-2"
+            placeholder="Enter price"
+          />
+        </div>
+      )}
 
-    if (!price) {
-      setDiscount("");
-      return;
-    }
+      {/* Percentage Input */}
+      <div className="mt-4">
+        <label className="text-sm font-bold">Discount %</label>
+        <input
+          type="number"
+          value={percentage}
+          onChange={(e) => {
+            const percentageValue = Number(e.target.value);
+            setPercentage(percentageValue);
 
-    const originalPrice = Number(price);
+            if (!price) {
+              setDiscount("");
+              return;
+            }
 
-    if (percentageValue === 0) {
-      setDiscount(originalPrice.toFixed(2)); // Final price = price
-    } else {
-      const finalPrice = originalPrice - (originalPrice * percentageValue) / 100;
-      setDiscount(finalPrice.toFixed(2));
-    }
-  }}
-    className="w-full border p-2 mb-2"
-    placeholder="Enter percentage %"
-  />
-</div>
+            const originalPrice = Number(price);
 
-{/* Discount amount (readonly) */}
-<div className="mt-4">
-  <label className="text-sm font-bold">Discount Amount (Auto)</label>
-  <input
-    type="number"
-    value={discount}
-    readOnly
-    className="w-full border p-2 bg-gray-200 cursor-not-allowed mb-2"
-  />
-</div>
+            if (percentageValue === 0) {
+              setDiscount(originalPrice.toFixed(2)); // Final price = price
+            } else {
+              const finalPrice = originalPrice - (originalPrice * percentageValue) / 100;
+              setDiscount(finalPrice.toFixed(2));
+            }
+          }}
+          className="w-full border p-2 mb-2"
+          placeholder="Enter percentage %"
+        />
+      </div>
+
+      {/* Discount amount (readonly) */}
+      <div className="mt-4">
+        <label className="text-sm font-bold">Discount Amount (Auto)</label>
+        <input
+          type="number"
+          value={discount}
+          readOnly
+          className="w-full border p-2 bg-gray-200 cursor-not-allowed mb-2"
+        />
+      </div>
 
 
 
 
-{/* <div className="mt-4">
+      {/* <div className="mt-4">
   <label className="text-sm font-bold">Points</label>
   <input
     type="number"

@@ -21,6 +21,7 @@ model Product {
   arrival      String   @default("no")
   points      String?
     percentage      String?
+    sort      Int?
 }
 
 model Category {

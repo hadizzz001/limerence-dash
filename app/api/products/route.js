@@ -37,7 +37,6 @@ export async function POST(req) {
         color,
         type,
       percentage,
- 
 
       },
     });
